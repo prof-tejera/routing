@@ -12,5 +12,73 @@ However, even though it can be done as we have shown in the simple blog app, as 
 
 ## React Router
 
-The easiest way to learn how to use this is with an example so lets refactor our Blog to user routing. First, we define our routes:
+The easiest way to learn how to use this is with an example so lets refactor our Blog to user routing. First, we will wrap our application in a `BrowserRouter`. This allows us to use navigation within the application, you can think of it as a "provider of navigation". Inside it, we can use `Routes` to define the different paths that we can navigate to and the React element each one should render:
 
+```jsx
+const App = () => {
+  return <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<Blog />} />
+      <Route path="/create" element={<NewPost />} />
+      <Route path="/post/:id" element={<Post />} />
+    </Routes>
+  </BrowserRouter>
+}
+```
+
+Now when we navigate to `/`, we will see the `Blog` element rendered, etc. Note how the last route has `:id`, which represents a param. We can access this param in the `Post` component using the `useParams` hook as follows:
+
+```jsx
+import { useParams } from 'react-router-dom';
+
+const Post = () => {
+  const { id } = useParams();
+  const { retrievePost } = useContext(BlogContext);
+  const post = retrievePost({ postId: id });
+
+  if (!post) return <div>Not Found</div>;
+
+  return <InnerPost post={post} />;
+};
+```
+
+### Linking
+
+To navigate within our application, we should avoid using standard anchor tags (`<a href="/">Home</a>`). Using these links would cause a full page refresh which will restart our app, downloading all assets (js, css, etc) again. In most cases the client (browser) will have some sort of caching, but we cannot be certain of this. Instead, we should use the `Link` component provided by `react-router-dom` as:
+
+```jsx
+import { Link } from 'react-router-dom';
+
+...
+  <Link to="/">Home</Link>
+...
+```
+
+This will navigate without refreshing the page but will still push into the browser history so Back/Forward actions will still work.
+
+### Navigating
+
+Sometimes in our applications we want to be able to navigate to different parts of the application after an event occurs. For example, after a form is submitted correctly, without requiring the user to click a link. To do this, we use the `useNavigate` hook as follows:
+
+```jsx
+import { useNavigate } from 'react-router-dom';
+
+const Form = () => {
+
+  const submit = () => {
+    fetch('some api') // <-- endpoint to create a new post in some API
+      .then(r => r.json())
+      .then(r => {
+        // After the post is created, we can navigate to it
+        navigate(`/post/${r.id}`)
+      })
+  }
+
+  return <div>
+    <div>Some Content</div>
+    <button onClick={submit}>Submit</button>
+  </div>
+}
+```
+
+We have covered the basics of `react-router` but barely scratched the surface as it can do a lot more. If you want to read more please check out the [documentation](https://reactrouter.com/).
